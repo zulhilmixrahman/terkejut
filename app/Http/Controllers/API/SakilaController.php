@@ -4,14 +4,16 @@ namespace App\Http\Controllers\API;
 
 use App\Film;
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SakilaController extends Controller
 {
     public function filmList()
     {
-        $films = DB::table('film')->paginate(20);
+        $films = DB::table('film')->paginate(10);
         return $films;
     }
 
@@ -55,6 +57,29 @@ class SakilaController extends Controller
             $film->save();
             return $film;
         }
-        return ['status' => 'failed', 'error' => 500, 'msg' => 'Record not found!'];
+        return ['status' => 'failed', 'code' => 500, 'msg' => 'Record not found!'];
+    }
+
+    public function delete($id)
+    {
+        $film = Film::find($id);
+        if($film){
+            $film->delete();
+            return ['status' => 'ok', 'code' => 200];
+        }
+        return ['status' => 'failed', 'code' => 500, 'msg' => 'Record not found!'];
+    }
+
+    public function upload(Request $request)
+    {
+        $image = $request->file('img');
+        // Storage::put('images', $image, $image->getClientOriginalName());
+        try{
+            $image->storeAs('images', $image->getClientOriginalName(), 'public');
+            return ['status' => 'ok'];
+        } catch(Exception $e){
+            return ['status' => 'ok', 'code' => $e->getCode(), 'msg' => $e->getMessage()];
+        }
+
     }
 }
